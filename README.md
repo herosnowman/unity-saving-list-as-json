@@ -1,7 +1,7 @@
 # This is short code for saving list of objects as json in unity
 **Before posting your problem,make sure to fully read the instructions**
 1. Create a C# script named SaveGame
-2. Copy paste code.txt content
+2. Copy and paste code.txt content
 3. add new tag to objects called **"saveable"**
 4. create folder Resources\Prefabs\
 5. drag objects from scene(or existing prefab) to *Prefabs* folder 
