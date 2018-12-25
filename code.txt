@@ -1,0 +1,111 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+
+public class SaveGame : MonoBehaviour
+{
+    GameObject[] objects;
+    public ActorDatas data = new ActorDatas();
+    private string FileLocation;
+
+    void Start()
+    {
+        FileLocation = Application.persistentDataPath + "/data.json";
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            Save();
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            Load();
+        }
+    }
+    
+    public void Save()
+    {
+        //getting all objects to save
+        objects = GameObject.FindGameObjectsWithTag("saveable");
+        foreach (GameObject ob in objects)
+        {
+            string name = ob.name;
+            try
+            {
+                //fixing name error
+                int start = name.IndexOf("(");
+                int end = name.IndexOf(")");
+                string result = name.Substring(start, end - start + 1);
+                name = name.Replace(result, "");
+                name = name.Trim();
+            }
+            catch
+            {
+
+            }
+            //adding data to list one by one
+            data.datas.Add(new ActorData() { name = name, pos = ob.transform.position, rot = ob.transform.rotation });
+        }
+        //converting data to json and saving it
+        string jsonData = JsonUtility.ToJson(data);
+        File.WriteAllText(FileLocation, jsonData);
+        //clearing temporary data
+        data.datas.Clear();
+        objects = null;
+    }
+
+    public void Load()
+    {
+        //checking if file exists
+        if(!File.Exists(FileLocation))
+        {
+            print("File does not exist");
+            return;
+        }
+        //removing current objects
+        objects = GameObject.FindGameObjectsWithTag("saveable");
+        foreach (GameObject ob in objects)
+        {
+            Destroy(ob);
+        }
+        objects = null;
+        //reading the json file and comverting it to data
+        string jsonData = File.ReadAllText(FileLocation);
+        data = JsonUtility.FromJson<ActorDatas>(jsonData);
+        foreach (ActorData singledata in data.datas)
+        {
+            //looking for prefab name that is in data.json
+            UnityEngine.Object prefab = Resources.Load("Prefabs/" + singledata.name);
+            if (prefab != null)
+            {
+                //spawning saved objects one by one
+                Instantiate(prefab, singledata.pos, singledata.rot);
+            }
+        }
+        //clearing temporary data
+        data.datas.Clear();
+    }
+}
+
+//this class turns ActorData list into single data,since that's the only way unity supports.
+//this can be left as it is now
+[Serializable]
+public class ActorDatas
+{
+    public List<ActorData> datas;
+}
+
+//you can use this class as a list
+//you can add more variables or remove existing ones
+[Serializable]
+public class ActorData
+{
+    public Quaternion rot;
+
+    public Vector3 pos;
+
+    public string name;
+}
